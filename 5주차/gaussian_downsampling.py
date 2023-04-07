@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
-
+import gaussian_blur
 def my_gaussian_downsampling(src, ratio, mask):
 
     """
@@ -18,7 +18,12 @@ def my_gaussian_downsampling(src, ratio, mask):
     """
 
     # gaussian filtering - 내장 함수 사용
-    blur_src = cv2.filter2D(src.astpye(np.float32), -1, mask)
+    blur_src = cv2.filter2D(src.astype(np.float32), -1, mask)
+
+
+    # (h, w) = src.shape
+    # blur_src = gaussian_blur.my_gaussian_filter(src, (h, w), sigma=3)
+    # blur_src = np.round(blur_src).astype(np.uint8)
 
     # ratio 만큼 행과 열을 추출
     downsampled_blur_img = blur_src[::ratio, ::ratio]

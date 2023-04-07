@@ -4,10 +4,13 @@ import numpy as np
 def my_bilinear(src, scale):
 
     (h, w) = src.shape
+
+    # scale값이 곱해진 후 해당 값이 소수로 반환되었을 때 0.5를 더해서 픽셀 생성
     h_dst = int(h * scale + 0.5)
     w_dst = int(w * scale + 0.5)
 
     dst = np.zeros((h_dst, w_dst), dtype=np.float32)
+
 
     print('original shape : {}'.format(src.shape))
     print('dst shape : {}'.format(dst.shape))
@@ -35,7 +38,9 @@ def my_bilinear(src, scale):
                         + (s * t * src[y_down, x_right])
             dst[row, col] = intensity
 
+
     dst = np.round(dst).astype(np.uint8)
+
     return dst
 
 if __name__ == '__main__':

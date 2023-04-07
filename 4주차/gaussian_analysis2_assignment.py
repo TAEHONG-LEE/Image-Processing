@@ -67,7 +67,7 @@ def my_get_Gaussian_filter(fshape, sigma=1):
     ############################################################################
 
     y, x = np.mgrid[-(f_w//2):f_w//2+1, -(f_w//2):f_w//2+1]
-    print(y, x)
+
     # 2차 gaussian mask 생성
     gaussian_filter = (np.exp(-(x*x+y*y)/(2*sigma**2)))/(2*np.pi*sigma**2)
 

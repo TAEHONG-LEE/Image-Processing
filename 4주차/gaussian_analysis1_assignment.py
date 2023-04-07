@@ -47,6 +47,7 @@ def my_filtering(src, mask, pad_type='zero'):
             # dst = ???
             dst[row, col] = np.sum(pad_img[row:row+f_h, col:col+f_w]*mask)
     dst = np.round(dst).astype(np.uint8)
+
     return dst
 
 def my_get_Gaussian_filter(fshape, sigma=1): # fshape (filter_size, 1) or (1, filter_size)
@@ -68,13 +69,13 @@ def my_get_Gaussian_filter(fshape, sigma=1): # fshape (filter_size, 1) or (1, fi
     ############################################################################
 
     if (f_h == 1):
-        print(f_w//2)
         y, x = np.mgrid[-(f_w//2):f_w//2+1, -(f_w//2):f_w//2+1]
-        print(x)
+        x = x[:1,:]
         gaussian_filter = np.exp((-x*x)/(2*sigma**2))/(np.sqrt(2*np.pi)*sigma)
 
     elif (f_w == 1):
-        y, x = np.mgrid[(f_h/2)-f_h:f_h/2, (f_h/2)-f_h:f_h/2]
+        y, x = np.mgrid[-(f_h//2):f_h//2+1, -(f_h//2):f_h//2+1]
+        y = y[:,:1]
         gaussian_filter = np.exp((-y*y)/(2*sigma**2))/(np.sqrt(2*np.pi)*sigma)
 
 
@@ -94,7 +95,7 @@ def my_gaussian_filter(src, fshape, sigma=15, verbose=False):
 
     if verbose:
         print('<Gaussian filter> - shape:', fshape, '-sigma:', sigma)
-        print(filter)
+
 
     dst = my_filtering(src, filter)
     return dst, filter

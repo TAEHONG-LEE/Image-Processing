@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import gaussian_blur
 
 def my_bilinear(src, scale):
 
@@ -16,9 +17,24 @@ def my_bilinear(src, scale):
             # TODO bilinear interpolation 실습 코드 참고
             # TODO Note: dst변수 data type은 np.float32로해서 반환할 것
             #######################################################################
+            y = row / scale
+            x = col / scale
 
+            y_up = int(y)
+            y_down = min(int(y+1), h-1)
+            x_left = int(x)
+            x_right = min(int(x+1), w-1)
 
-            dst[row, col] = ???
+            t = y-y_up
+            s = x - x_left
+
+            intensity = ((1 - s) * (1 - t) * src[y_up, x_left]) \
+                        + (s * (1 - t) * src[y_up, x_right]) \
+                        + ((1 - s) * t * src[y_down, x_left]) \
+                        + (s * t * src[y_down, x_right])
+
+            # dst[row, col] = ???
+            dst[row, col] = intensity
 
     return dst
 
@@ -53,8 +69,9 @@ def my_nearest_neighbor(src, scale=None, shape=None):
             # TODO nearest interpolation 실습 코드 참고
             # TODO Note: dst변수 data type은 np.float32로해서 반환할 것
             #######################################################################
-
-            dst[row, col] = ???
+            r = min(int(row / h_scale), h - 1)
+            c = min(int(col / w_scale), w - 1)
+            dst[row, col] = src[r, c]
 
     return dst
 
@@ -77,15 +94,21 @@ def my_downsampling(src, ratio):
     # TODO 단순히 ratio 비율 만큼 행 열 추출
     ##########################################################################
 
-    # ratio 만큼 행과 열을 추출
-    downsampled_img = ???
+    # # gaussian filtering을 사용하여 blur 진행
+    #
+    # (h, w) = src.shape
+    # blur_src = gaussian_blur.my_gaussian_filter(src, (h, w), sigma=3)
+    # blur_src = np.round(blur_src).astype(np.uint8)
 
+    # ratio 만큼 행과 열을 추출
+    downsampled_img = src[::ratio, ::ratio]
     return downsampled_img
 
 
 def my_upsampling_laplacian(srcs, ratio, residuals=None, upsampling_type='bilinear'):
 
     pyramid_len = len(srcs)
+    # 리스트의 순서를 역순으로 뒤집어서 할당
     srcs = srcs[::-1]
 
     if residuals is not None:
@@ -103,7 +126,7 @@ def my_upsampling_laplacian(srcs, ratio, residuals=None, upsampling_type='biline
             #######################################################################
             # TODO upsampling된 이미지에 residual 정보 반영하기
             #######################################################################
-            x = ???
+            x = x + residuals[i]
 
     x = np.round(x).astype(np.uint8)
     return x
@@ -137,25 +160,28 @@ def my_downsampling_pyramid(src, ratio, pyramid_lvl, filter_size, sigma):
 
             ###########################################################################
             # TODO Laplacian pyramid 진행 절차 (교수님 PPT 41page 참고)
-            # TODO 1. filtering cv2.filter2D 내장함수 사용할
+            # TODO 1. filtering cv2.filter2D 내장함수 사용할 수 있다
             # TODO 2. residual 계산 및 저장
             # TODO 3. subsample(즉 downsampling 이미지 크기 줄이기) - my_downsampling 함수 사용
             ###########################################################################
 
             # 1. filtering
-            filtered_img = ???
+            filtered_img = cv2.filter2D(gaussian_pyramid[-1], -1, gaussian_filter)
 
             # 2. residual 계산 및 저장
-            residual = ???
+            residual = gaussian_pyramid[-1] - filtered_img
             residuals.append(residual)
+            print(gaussian_pyramid[-1].shape)
 
             if level == 0:
                 # 원본 이미지 삭제
                 gaussian_pyramid.pop()
 
             # 3. subsample(즉 downsampling 이미지 크기 줄이기)
-            out_img = ???
+            # out_img = ???
+            out_img = my_downsampling(filtered_img, ratio)
             gaussian_pyramid.append(out_img)
+            downsample_imgs.append(np.round(out_img).astype(np.uint8))
 
         return residuals, gaussian_pyramid
 
@@ -167,7 +193,7 @@ def my_downsampling_pyramid(src, ratio, pyramid_lvl, filter_size, sigma):
             # TODO subsample(즉 downsampling 이미지 크기 줄이기) - my_downsampling 함수 사용
             ###########################################################################
 
-            out_img = ???
+            out_img = my_downsampling(src, ratio)
             downsample_imgs.append(out_img)
 
         return downsample_imgs
@@ -257,7 +283,7 @@ def main():
     cv2.imshow('no residual nearest', no_res_near_output)
     cv2.imshow('bilinear + residual', bilinear_output)
     cv2.imshow('no residual bilinear output', no_res_bilinear_output)
-    cv2.imshow('naive bilinear outputt', naive_bilinear_output)
+    cv2.imshow('naive bilinear output', naive_bilinear_output)
     cv2.waitKey()
     cv2.destroyAllWindows()
 
