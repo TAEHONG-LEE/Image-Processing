@@ -29,9 +29,11 @@ def my_get_Gaussian_filter(fshape, sigma=1):
     #           [-1, 0, 1],
     #           [-1, 0, 1]]
     ############################################################################
+    y, x = np.mgrid[-(f_h//2):f_h//2+1, -(f_w//2):f_w//2+1]
 
+    gaussian_filter = (np.exp(-(x*x+y*y)/(2*sigma**2))/(2*np.pi*sigma**2))
 
-    gaussian_filter = ???
+    gaussian_filter = gaussian_filter / np.sum(gaussian_filter)
     return gaussian_filter
 
 def get_DoG_filter_by_filtering(fsize, sigma):
@@ -53,16 +55,21 @@ def get_DoG_filter_by_filtering(fsize, sigma):
     # TODO  2.4 y,x 각각의 방향으로 미분 filtering한 결과 값을 반환 -> dog_y_filer, dog_x_filter
     # TODO NOTE filtering시 내장 함수 사용 금지 (cv2.filter2D)
     ############################################################################
+    derivated_y = np.array([[-1],
+                            [0],
+                            [1]])
+    derivated_x = np.array([-1, 0, 1])
 
-    dog_y_filter = ???
+    gaussian_filter = my_get_Gaussian_filter((fsize, fsize), sigma)
+    dog_y_filter = filtering(gaussian_filter, derivated_y)
+    dog_x_filter = filtering(gaussian_filter, derivated_x)
 
-    dog_x_filter = ???
     return dog_y_filter, dog_x_filter
 
 def get_DoG_filter_by_expression(fsize, sigma):
     """
     
-    :param fsize: dog filter 크
+    :param fsize: dog filter 크기
     :param sigma: sigma 값
     :return: DoG_y, DoG_x
     """
@@ -81,8 +88,15 @@ def get_DoG_filter_by_expression(fsize, sigma):
     # TODO 수식은 이론 및 실습 ppt를 참고하여 구현.
     ############################################################################
 
-    DoG_x = ???
-    DoG_y = ???
+    y, x = np.mgrid[-(fsize//2):(fsize//2)+1, -(fsize//2):(fsize//2)+1]
+
+    gaussian_filter = my_get_Gaussian_filter((fsize, fsize), sigma)
+
+    # DoG_y = (-y / sigma**2)*gaussian_filter
+    # DoG_x = (-x / sigma**2)*gaussian_filter
+    DoG_y = (-y / sigma**2)*(np.exp(-(x*x+y*y)/(2*sigma**2))/(2*np.pi*sigma**2))
+    DoG_x = (-x / sigma**2)*(np.exp(-(x*x+y*y)/(2*sigma**2))/(2*np.pi*sigma**2))
+    print(DoG_x)
 
     return DoG_y, DoG_x
 
@@ -93,7 +107,7 @@ def calculate_magnitude(sobel_x, sobel_y):
 def make_noise(std, gray):
 
     height, width = gray.shape
-    img_noise = np.zeros((height, width), dtype=np.float)
+    img_noise = np.zeros((height, width), dtype=float)
     for i in range(height):
         for a in range(width):
             make_noise = np.random.normal()  # 랜덤함수를 이용하여 노이즈 적용
@@ -121,7 +135,7 @@ if __name__ == "__main__":
     # TODO 1 수식으로 임의의 kernel 크기를 갖는 DoG 필터 마스크 구현
     ############################################################################
 
-    dog_1_y, dog_1_x = get_DoG_filter_by_expression(5, 1)
+    dog_1_y, dog_1_x = get_DoG_filter_by_expression(3, 1)
     dog_y_image = cv2.filter2D(image, -1, dog_1_y, borderType=cv2.BORDER_CONSTANT)
     dog_x_image = cv2.filter2D(image, -1, dog_1_x, borderType=cv2.BORDER_CONSTANT)
 
@@ -130,7 +144,7 @@ if __name__ == "__main__":
     # TODO 2 filtering으로 임의의 kernel 크기를 갖는 DoG 필터 마스크 구현
     ############################################################################
 
-    dog_2_y, dog_2_x  = get_DoG_filter_by_filtering(5, 1)
+    dog_2_y, dog_2_x  = get_DoG_filter_by_filtering(3, 1)
     dog_y_image2 = cv2.filter2D(image, -1, dog_2_y, borderType=cv2.BORDER_CONSTANT)
     dog_x_image2 = cv2.filter2D(image, -1, dog_2_x, borderType=cv2.BORDER_CONSTANT)
 
